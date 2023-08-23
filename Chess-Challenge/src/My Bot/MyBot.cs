@@ -2,13 +2,11 @@
 using ChessChallenge.API;
 using System;
 using System.Linq;
-
-
     public class MyBot : IChessBot
     {
 
         Move rootBestMove;
-        //Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
+        // Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
         Move[] kMoves = new Move[1024]; 
         int[,,] hMoves = new int[2, 7, 64];
         // const int TTlength= 1048576;
@@ -31,7 +29,7 @@ using System.Linq;
             if(InCheck && !qsearch) depth++;
 
             var (ttKey, ttMove, ttDepth, ttScore, ttBound) = TTtable[key % 1048576];
-        
+
             // TT cutoff
             if(Math.Abs(ttScore) < 30000  - 1000 && isNotRoot && ttKey == key && ttDepth >= depth && (
                 ttBound == 3 // exact score
@@ -78,26 +76,32 @@ using System.Linq;
 
             Move bestMove = ttMove; 
             Array.Sort(scores, allMoves);
-
+            
             // Tree search
-            for(int i = 0; i < amtMoves; i++) {
+            for(int i = 0, R = i > 3 && depth > 3 ? movesTried / (notPvNode ? 8 : 6) : 1; i < amtMoves; i++) {
 
+                // Late Move Pruning
+                if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
+                
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
 
                 Move move = allMoves[i];  
+
                 board.MakeMove(move);
-                    int R = i > 3 && depth > 3 ? 1 + i / (notPvNode ? 6 : 8) + depth / 6 : 1;
-                    if ((i == 0 || qsearch) ||
+                    // PVS + LMR
+                    if (i == 0 || qsearch ||
+                    // If PV-node / qsearch, search(beta)
                     (Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1))
+                    // If null-window search fails-high, search(beta)
                     ) Search(beta);   
                 board.UndoMove(move);
-
 
 
                 // Update best move if neccesary
                 if (score > bestScore) {
                     bestScore = score;
                     if (!isNotRoot) rootBestMove = move;
+                    // Only update bestMove on alpha improvements   
                     if (bestScore > alpha) {
                         alpha = bestScore;
                         bestMove = move;
@@ -151,8 +155,8 @@ using System.Linq;
 
         // Pawn, Knight, Bishop, Rook, Queen, King 
         private readonly short[] PieceValues = { 82, 337, 365, 477, 1025, 0, // Middlegame
-                                                94, 281, 297, 512, 936, 0,
-                                                 0, 1, 1, 2, 4, 0 };// Endgame
+                                                94, 281, 297, 512, 936, 0, // Endgame   
+                                                 0, 1, 1, 2, 4, 0 };
 
         // Big table packed with data from premade piece square tables
         // Unpack using PackedEvaluationTables[set, rank] = file
