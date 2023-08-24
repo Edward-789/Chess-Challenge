@@ -78,6 +78,7 @@ using System.Linq;
             Array.Sort(scores, allMoves);
             
             // Tree search
+            //I get an error here because we do not have a variable movesTried
             for(int i = 0, R = i > 3 && depth > 3 ? movesTried / (notPvNode ? 8 : 6) : 1; i < amtMoves; i++) {
 
                 // Late Move Pruning
