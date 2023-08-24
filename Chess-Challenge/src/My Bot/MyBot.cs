@@ -137,13 +137,23 @@ using System.Linq;
         }
         
         
-        public Move Think(Board board, Timer timer)
+                public Move Think(Board board, Timer timer)
         {
             Array.Clear(hMoves);
             rootBestMove = Move.NullMove;
             // Iterative deepening
-            for (int depth = 0;;) {
-                Negamax(depth++, -600000, 600000,board, timer, 0);
+            for (int depth = 0 ,alpha = -600000, beta = 600000, eval;;) 
+            {
+                eval = Negamax(depth++, alpha, beta,board, timer, 0);
+                if (eval <= alpha)
+                alpha -= 62;
+                else if (eval >= beta)
+                beta += 62;
+                else
+                {
+                alpha = eval - 17;
+                beta = eval + 17;
+                }
 
 
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
@@ -193,4 +203,4 @@ using System.Linq;
                                                                                                         // Tempo bonus to help with aspiration windows
         return (middlegame * gamephase + endgame * (24 - gamephase)) / 24 * (board.IsWhiteToMove ? 1 : -1) + gamephase / 2;
     }
-}   
+}     
