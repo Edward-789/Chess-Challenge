@@ -78,7 +78,7 @@ using System.Linq;
             Array.Sort(scores, allMoves);
             
             // Tree search
-            for(int i = 0, R = i > 3 && depth > 3 ? movesTried / (notPvNode ? 8 : 6) : 1; i < amtMoves; i++) {
+            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves; i++) {
 
                 // Late Move Pruning
                 if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
