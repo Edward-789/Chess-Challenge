@@ -8,7 +8,7 @@ using System.Linq;
         Move rootBestMove;
         // Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
         Move[] kMoves = new Move[1024]; 
-        int[,,] hMoves = new int[2, 7, 64];
+        int[,,] hMoves;
         // const int TTlength= 1048576;
         (ulong, Move, int, int, int)[] TTtable= new (ulong, Move, int, int, int)[1048576];
 
@@ -78,7 +78,7 @@ using System.Linq;
             Array.Sort(scores, allMoves);
             
             // Tree search
-            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves; i++) {
+            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves;) {
 
                 // Late Move Pruning
                 if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
@@ -89,7 +89,7 @@ using System.Linq;
 
                 board.MakeMove(move);
                     // PVS + LMR
-                    if (i == 0 || qsearch ||
+                    if (i++ == 0 || qsearch ||
                     // If PV-node / qsearch, search(beta)
                     (Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1))
                     // If null-window search fails-high, search(beta)
@@ -137,24 +137,21 @@ using System.Linq;
         }
         
         
-                public Move Think(Board board, Timer timer)
+        public Move Think(Board board, Timer timer)
         {
-            Array.Clear(hMoves);
-            rootBestMove = Move.NullMove;
-            // Iterative deepening
-            for (int depth = 0 ,alpha = -600000, beta = 600000, eval;;) 
+            hMoves = new int[2, 7, 64];
+            for (int depth = 0, alpha = -600000, beta = 600000;;) 
             {
-                eval = Negamax(depth++, alpha, beta,board, timer, 0);
-                if (eval <= alpha)
-                alpha -= 62;
-                else if (eval >= beta)
-                beta += 62;
-                else
-                {
-                alpha = eval - 17;
-                beta = eval + 17;
-                }
 
+                // Aspiration windows
+                int eval = Negamax(depth++, alpha, beta, board, timer, 0);
+                
+                if (eval <= alpha) alpha -= 62;
+                else if (eval >= beta) beta += 62;
+                else {
+                    alpha = eval - 17;
+                    beta = eval + 17;
+                }
 
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
                     break;
@@ -163,7 +160,8 @@ using System.Linq;
             return rootBestMove;
         }
 
-        // Pawn, Knight, Bishop, Rook, Queen, King 
+        // Tyrants PSTS,
+        // Could quantize my own, but i think for now this is good enough
         private readonly short[] PieceValues = { 82, 337, 365, 477, 1025, 0, // Middlegame
                                                 94, 281, 297, 512, 936, 0, // Endgame   
                                                  0, 1, 1, 2, 4, 0 };
