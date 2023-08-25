@@ -15,7 +15,7 @@ using System.Linq;
 
             bool isNotRoot = ply > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta;
             ulong key = board.ZobristKey;
-            int score;
+            int score, bestScore = -600001;
 
             // Check for repetition
             if(isNotRoot && board.IsRepeatedPosition()) return 0;   
@@ -25,12 +25,12 @@ using System.Linq;
             int Search(int nextAlpha, int Reduction = 1) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, board, timer, ply + 1);
 
             // Check Extensions
-            if(InCheck && !qsearch) depth++;
+            if(InCheck) depth++;
 
             var (ttKey, ttMove, ttDepth, ttScore, ttBound) = TTtable[key % 1048576];
 
             // TT cutoff
-            if(Math.Abs(ttScore) < 30000  - 1000 && isNotRoot && ttKey == key && ttDepth >= depth && (
+            if(Math.Abs(ttScore) < 29000 && isNotRoot && ttKey == key && ttDepth >= depth && (
                 ttBound == 3 // exact score
                     || ttBound == 2 && ttScore >= beta // lower bound, fail high
                     || ttBound == 1 && ttScore <= alpha // upper bound, fail low
@@ -39,17 +39,18 @@ using System.Linq;
             // Internal Iterative Reductions (IIR)
             if(depth > 4 && ttKey != key && !InCheck) depth--;
 
-            int bestScore = -600001;
 
             if(qsearch) {
                 bestScore = staticEvalPos(board);
                 if(bestScore >= beta) return bestScore; 
                 alpha = Math.Max(alpha, bestScore);
             } else if(notPvNode && !InCheck) {
-                if (depth <= 6 && staticEvalPos(board) - 100 * depth >= beta) return beta;
+                // Reverse futility Pruning
+                if (depth <= 8 && staticEvalPos(board) - 100 * depth >= beta) return beta;
 
                 // Null move pruning
-                if (depth >= 2 && board.TrySkipTurn()) {
+                if (depth >= 2) {
+                    board.ForceSkipTurn();
                     int nullScore = Search(beta, 3 + depth / 5);
                     board.UndoSkipTurn();   
                     if (nullScore >= beta) return nullScore;
@@ -57,7 +58,7 @@ using System.Linq;
             }
 
             var allMoves = board.GetLegalMoves(qsearch);
-            int amtMoves = allMoves.Length, origAlpha = alpha, colour = board.IsWhiteToMove ? 0 : 1;
+            int amtMoves = allMoves.Length, origAlpha = alpha, colour = Convert.ToInt32(board.IsWhiteToMove);
 
         var scores = new int[amtMoves];
        
@@ -77,10 +78,10 @@ using System.Linq;
             Array.Sort(scores, allMoves);
             
             // Tree search
-            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves;i++) {
+            for(int i = 0; i < amtMoves; i++) {
 
                 // Late Move Pruning
-                if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
+                if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) break;
                 
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
 
@@ -88,6 +89,7 @@ using System.Linq;
 
                 board.MakeMove(move);
                     // PVS + LMR
+                    int R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1;
                     if (i == 0 || qsearch ||
                     // If PV-node / qsearch, search(beta)
                     (Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1))
@@ -152,15 +154,8 @@ using System.Linq;
                     beta = eval + 17;
                 }
 
-
-                
-
-
-                if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
-                    break;
-
+                if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining)   return rootBestMove;
             }
-            return rootBestMove;
         }
 
         // Tyrants PSTS,
