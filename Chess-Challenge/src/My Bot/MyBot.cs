@@ -78,7 +78,7 @@ using System.Linq;
             Array.Sort(scores, allMoves);
             
             // Tree search
-            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves;) {
+            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves;i++) {
 
                 // Late Move Pruning
                 if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
@@ -89,7 +89,7 @@ using System.Linq;
 
                 board.MakeMove(move);
                     // PVS + LMR
-                    if (i++ == 0 || qsearch ||
+                    if (i == 0 || qsearch ||
                     // If PV-node / qsearch, search(beta)
                     (Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1))
                     // If null-window search fails-high, search(beta)
