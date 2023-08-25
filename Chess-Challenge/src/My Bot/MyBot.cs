@@ -1,4 +1,3 @@
-
 using ChessChallenge.API;
 using System;
 using System.Linq;
@@ -47,7 +46,7 @@ using System.Linq;
                 if(bestScore >= beta) return bestScore; 
                 alpha = Math.Max(alpha, bestScore);
             } else if(notPvNode && !InCheck) {
-                if (depth <= 8 && staticEvalPos(board) - 100 * depth >= beta) return beta;
+                if (depth <= 6 && staticEvalPos(board) - 100 * depth >= beta) return beta;
 
                 // Null move pruning
                 if (depth >= 2 && board.TrySkipTurn()) {
@@ -78,7 +77,7 @@ using System.Linq;
             Array.Sort(scores, allMoves);
             
             // Tree search
-            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves;i++) {
+            for(int i = 0, R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1; i < amtMoves;) {
 
                 // Late Move Pruning
                 if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
@@ -89,7 +88,7 @@ using System.Linq;
 
                 board.MakeMove(move);
                     // PVS + LMR
-                    if (i == 0 || qsearch ||
+                    if (i++ == 0 || qsearch ||
                     // If PV-node / qsearch, search(beta)
                     (Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1))
                     // If null-window search fails-high, search(beta)
@@ -153,6 +152,10 @@ using System.Linq;
                     beta = eval + 17;
                 }
 
+
+                
+
+
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
                     break;
 
@@ -187,7 +190,7 @@ using System.Linq;
     {
         int middlegame = 0, endgame = 0, gamephase = 0, sideToMove = 2, piece, square;
         for (; --sideToMove >= 0; middlegame = -middlegame, endgame = -endgame)
-            for (piece = -1; ++piece < 6;)
+            for (piece = -1  ; ++piece < 6;)
                 for (ulong mask = board.GetPieceBitboard((PieceType)piece + 1, sideToMove > 0); mask != 0;)
                 {
                     // Gamephase, middlegame -> endgame
@@ -201,4 +204,5 @@ using System.Linq;
                                                                                                         // Tempo bonus to help with aspiration windows
         return (middlegame * gamephase + endgame * (24 - gamephase)) / 24 * (board.IsWhiteToMove ? 1 : -1) + gamephase / 2;
     }
+    
 }     
