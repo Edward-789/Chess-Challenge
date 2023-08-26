@@ -32,7 +32,7 @@ using System.Linq;
                     var (ttKey, ttMove, ttDepth, ttScore, ttBound) = TTtable[key % 1048576];
 
                     // TT cutoff
-                    if(Math.Abs(ttScore) < 29000 && isNotRoot && ttKey == key && ttDepth >= depth && (
+                    if(isNotRoot && ttKey == key && ttDepth >= depth && (
                         ttBound == 3 // exact score
                             || ttBound == 2 && ttScore >= beta // lower bound, fail high
                             || ttBound == 1 && ttScore <= alpha // upper bound, fail low
@@ -120,7 +120,7 @@ using System.Linq;
 
                     // Check stale or checkmate
                     if(!qsearch && amtMoves == 0) 
-                        return InCheck ? ply - 30000 : 0;
+                        return InCheck ? board.PlyCount - 30000 : 0;
 
                     // Check fail-high/low/exact score for TT
                     // int bound = bestScore >= beta ? 2 : bestScore > origAlpha ? 3 : 1;
@@ -134,6 +134,7 @@ using System.Linq;
                     return bestScore;
 
             }
+            // Clear history
             hMoves = new int[2, 7, 64];
             for (int depth = 0, alpha = -600000, beta = 600000;;) 
             {
