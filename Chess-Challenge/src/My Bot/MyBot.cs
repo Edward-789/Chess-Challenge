@@ -15,128 +15,123 @@ using System.Linq;
             {
                 int Negamax(int depth, int alpha, int beta, int ply) {
 
-                bool isNotRoot = ply > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta;
-                ulong key = board.ZobristKey;
-                int score;
+                    bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta;
+                    ulong key = board.ZobristKey;
+                    int score, bestScore = -600001;
 
-                // Check for repetition
-                if(isNotRoot && board.IsRepeatedPosition()) return 0;   
+                    // Check for repetition
+                    if(isNotRoot && board.IsRepeatedPosition()) return 0;   
 
-                
-                // Local function 
-                int Search(int nextAlpha, int Reduction = 1) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply + 1);
-
-                // Check Extensions
-                if(InCheck && !qsearch) depth++;
-
-                var (ttKey, ttMove, ttDepth, ttScore, ttBound) = TTtable[key % 1048576];
-
-                // TT cutoff
-                if(Math.Abs(ttScore) < 30000  - 1000 && isNotRoot && ttKey == key && ttDepth >= depth && (
-                    ttBound == 3 // exact score
-                        || ttBound == 2 && ttScore >= beta // lower bound, fail high
-                        || ttBound == 1 && ttScore <= alpha // upper bound, fail low
-                )) return ttScore;
-                
-                // Internal Iterative Reductions (IIR)
-                else if(depth > 4 && !InCheck) depth--;
-
-                int bestScore = -600001;
-
-                if(qsearch) {
-                    bestScore = staticEvalPos(board);
-                    if(bestScore >= beta) return bestScore; 
-                    alpha = Math.Max(alpha, bestScore);
-                } else if(notPvNode && !InCheck) {
-                    if (depth <= 8 && staticEvalPos(board) - 100 * depth >= beta) return beta;
-
-                    // Null move pruning
-                    if (depth >= 2) {
-                        board.TrySkipTurn()
-                        int nullScore = Search(beta, 3 + depth / 5);
-                        board.UndoSkipTurn();   
-                        if (nullScore >= beta) return nullScore;
-                    }
-                }
-
-                var allMoves = board.GetLegalMoves(qsearch);
-                int amtMoves = allMoves.Length, colour = board.IsWhiteToMove ? 0 : 1, flag = 1;
-            var scores = new int[amtMoves];
-        
-            // Move ordering       
-            for(int i = 0; i < amtMoves;) {
-                Move move = allMoves[i];
-                    // TT move
-                    scores[i++] = -(ttMove == move ? 1000000000 :
-                                    move.IsCapture ?  100000 * (int)move.CapturePieceType - (int)move.MovePieceType :
-                                    move.IsPromotion ? 100000 * (int)move.PromotionPieceType :  
-                                    kMoves[ply] == move ? 95000 :
-                                    hMoves[colour, (int)move.MovePieceType, move.TargetSquare.Index]);
-                }
-            
-
-                Move bestMove = ttMove; 
-                Array.Sort(scores, allMoves);
-                
-                // Tree search
-                for(int i = 0; i < amtMoves;i++) {
-
-                    // Late Move Pruning
-                    if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
                     
-                    if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
+                    // Local function 
+                    int Search(int nextAlpha, int Reduction = 1) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply);
 
-                    Move move = allMoves[i];  
+                    // Check Extensions
+                    if(InCheck) depth++;
 
-                    board.MakeMove(move);
-                        // PVS + LMR
-                        int R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1
-                        if (i == 0 || qsearch || notPvNode || 
-                        // If PV-node / qsearch, search(beta)
-                        (Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1))
-                        // If null-window search fails-high, search(beta)
-                        ) Search(beta);   
-                    board.UndoMove(move);
+                    var (ttKey, ttMove, ttDepth, ttScore, ttBound) = TTtable[key % 1048576];
 
+                    // TT cutoff
+                    if(Math.Abs(ttScore) < 29000 && isNotRoot && ttKey == key && ttDepth >= depth && (
+                        ttBound == 3 // exact score
+                            || ttBound == 2 && ttScore >= beta // lower bound, fail high
+                            || ttBound == 1 && ttScore <= alpha // upper bound, fail low
+                    )) return ttScore;
+                    
+                    // Internal Iterative Reductions (IIR)
+                    else if(depth > 4 && !InCheck) depth--;
 
-                    // Update best move if neccesary
-                    if (score > bestScore) {
-                        bestScore = score;
-                        if (!isNotRoot) rootBestMove = move;
-                        // Only update bestMove on alpha improvements   
-                        if (bestScore > alpha) {
-                            alpha = bestScore;
-                            bestMove = move;
-                            flag = 3;
+                    if(qsearch) {
+                        bestScore = staticEvalPos(board);
+                        if(bestScore >= beta) return bestScore; 
+                        alpha = Math.Max(alpha, bestScore);
+                    } else if(notPvNode && !InCheck) {
+                        if (depth <= 8 && staticEvalPos(board) - 100 * depth >= beta) return beta;
+
+                        // Null move pruning
+                        if (depth >= 2 && board.TrySkipTurn()) {
+                            int nullScore = Search(beta, 3 + depth / 5);
+                            board.UndoSkipTurn();   
+                            if (nullScore >= beta) return nullScore;
                         }
                     }
-                    // Fail-High condition
-                    if (alpha >= beta) {
-                        if (!move.IsCapture) {
-                            kMoves[ply] =  move;
-                            hMoves[colour, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
-                        }
-                        flag = 2;
-                        break;
+
+                    var allMoves = board.GetLegalMoves(qsearch);
+                    int amtMoves = allMoves.Length, colour = board.IsWhiteToMove ? 0 : 1, flag = 1, i = 0;
+                    var scores = new int[amtMoves];
+            
+                    // Move ordering       
+                    for(; i < amtMoves;) {
+                        Move move = allMoves[i];
+                        scores[i++] = -(ttMove == move ? 1000000000 :
+                                        move.IsCapture ?  100000 * (int)move.CapturePieceType - (int)move.MovePieceType :
+                                        move.IsPromotion ? 100000 * (int)move.PromotionPieceType :  
+                                        kMoves[ply] == move ? 95000 :
+                                        hMoves[colour, (int)move.MovePieceType, move.TargetSquare.Index]);
                     }
 
+                    Move bestMove = ttMove; 
+                    Array.Sort(scores, allMoves);
+                    i = -1;
+                    
+                    // Tree search
+                    foreach(Move move in allMoves) {
+                        i++;
 
-                } // End of tree search
+                        // Late Move Pruning
+                        if (i > 3 + depth * depth && !qsearch && depth <= 6 && scores[i] > -95000) continue;
+                        
+                        if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
 
-                // Check stale or checkmate
-                if(!qsearch && amtMoves == 0) 
-                    return InCheck ? ply - 30000 : 0;
+                        board.MakeMove(move);
+                            // PVS + LMR
+                            int R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) : 1;
+                            if (i == 0 || qsearch || notPvNode || 
+                            // If PV-node / qsearch, search(beta)
+                            Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1)
+                            // If null-window search fails-high, search(beta)
+                            ) Search(beta);   
+                        board.UndoMove(move);
 
-                // Check fail-high/low/exact score for TT
-                // int bound = bestScore >= beta ? 2 : bestScore > origAlpha ? 3 : 1;
 
-                TTtable[key % 1048576] = (key,
-                                        bestMove, 
-                                        depth, 
-                                        bestScore, 
-                                        flag);
+                        // Update best move if neccesary
+                        if (score > bestScore) {
+                            bestScore = score;
+                            if (!isNotRoot) rootBestMove = move;
+                            // Only update bestMove on alpha improvements   
+                            if (bestScore > alpha) {
+                                alpha = bestScore;
+                                bestMove = move;
+                                flag = 3;
+                            }
+                        }
+                        // Fail-High condition
+                        if (alpha >= beta) {
+                            if (!move.IsCapture) {
+                                kMoves[ply] =  move;
+                                hMoves[colour, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                            }
+                            flag = 2;
+                            break;
+                        }
 
-                return bestScore;
+
+                    } // End of tree search
+
+                    // Check stale or checkmate
+                    if(!qsearch && amtMoves == 0) 
+                        return InCheck ? ply - 30000 : 0;
+
+                    // Check fail-high/low/exact score for TT
+                    // int bound = bestScore >= beta ? 2 : bestScore > origAlpha ? 3 : 1;
+
+                    TTtable[key % 1048576] = (key,
+                                            bestMove, 
+                                            depth, 
+                                            bestScore, 
+                                            flag);
+
+                    return bestScore;
 
             }
             hMoves = new int[2, 7, 64];
@@ -154,10 +149,9 @@ using System.Linq;
                 }
 
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
-                    break;
+                    return rootBestMove;
 
             }
-            return rootBestMove;
         }
 
         // Tyrants PSTS,
