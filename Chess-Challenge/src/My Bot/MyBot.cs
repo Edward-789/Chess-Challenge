@@ -51,7 +51,8 @@ using System.Linq;
                     if (depth <= 8 && staticEvalPos(board) - 100 * depth >= beta) return beta;
 
                     // Null move pruning
-                    if (depth >= 2 && board.TrySkipTurn()) {
+                    if (depth >= 2) {
+                        board.TrySkipTurn()
                         int nullScore = Search(beta, 3 + depth / 5);
                         board.UndoSkipTurn();   
                         if (nullScore >= beta) return nullScore;
