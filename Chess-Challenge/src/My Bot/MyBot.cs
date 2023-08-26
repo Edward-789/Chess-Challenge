@@ -7,12 +7,15 @@ using System.Linq;
         Move rootBestMove;
         // Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
         Move[] kMoves = new Move[1024]; 
-        int[,,] hMoves;
+
         // const int TTlength= 1048576;
         (ulong, Move, int, int, int)[] TTtable= new (ulong, Move, int, int, int)[1048576];
         
             public Move Think(Board board, Timer timer)
             {
+                
+                // Clear history
+                int[,,] hMoves = new int[2, 7, 64];
                 int Negamax(int depth, int alpha, int beta, int ply) {
 
                     bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta;
@@ -32,12 +35,14 @@ using System.Linq;
                     var (ttKey, ttMove, ttDepth, ttScore, ttBound) = TTtable[key % 1048576];
 
                     // TT cutoff
-                    if(isNotRoot && ttKey == key && ttDepth >= depth && (
-                        ttBound == 3 // exact score
-                            || ttBound == 2 && ttScore >= beta // lower bound, fail high
-                            || ttBound == 1 && ttScore <= alpha // upper bound, fail low
-                    )) return ttScore;
-                    
+                    if (ttKey == key) {
+                        if(isNotRoot && ttDepth >= depth && (
+                            ttBound == 3 // exact score
+                                || ttBound == 2 && ttScore >= beta // lower bound, fail high
+                                || ttBound == 1 && ttScore <= alpha // upper bound, fail low
+                        )) return ttScore;
+                    }
+
                     // Internal Iterative Reductions (IIR)
                     else if(depth > 4 && !InCheck) depth--;
 
@@ -134,8 +139,6 @@ using System.Linq;
                     return bestScore;
 
             }
-            // Clear history
-            hMoves = new int[2, 7, 64];
             for (int depth = 0, alpha = -600000, beta = 600000;;) 
             {
 
