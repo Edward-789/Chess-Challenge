@@ -36,7 +36,7 @@ using System.Linq;
 
                     // TT cutoff
                     if (ttKey == key) {
-                        if(isNotRoot && ttDepth >= depth && (
+                        if(notPvNode && ttDepth >= depth && (
                             ttBound == 3 // exact score
                                 || ttBound == 2 && ttScore >= beta // lower bound, fail high
                                 || ttBound == 1 && ttScore <= alpha // upper bound, fail low
