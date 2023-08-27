@@ -1,4 +1,5 @@
 using ChessChallenge.API;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Linq;
     public class MyBot : IChessBot
@@ -43,6 +44,7 @@ using System.Linq;
 
                 // Clear history
                 int[,,] hMoves = new int[2, 7, 64];
+                Move[,] cmhMoves = new Move[7, 64];
 
                 // Eval function
                 int staticEvalPos()
@@ -99,7 +101,8 @@ using System.Linq;
 
                     if(qsearch) {
                         bestScore = staticEval;
-                        if(bestScore >= beta) return bestScore; 
+                        if(bestScore >= beta)
+                        return bestScore; 
                         alpha = Math.Max(alpha, bestScore);
                     } else if (!InCheck && notPvNode) {
                         if (staticEval - 100 * depth >= beta) return staticEval;
@@ -123,13 +126,14 @@ using System.Linq;
                                         move.IsCapture ?  100000 * (int)move.CapturePieceType - (int)move.MovePieceType :
                                         move.IsPromotion ? 100000 * (int)move.PromotionPieceType :  
                                         kMoves[ply] == move ? 95000 :
+                                        cmhMoves[(int)move.MovePieceType,move.TargetSquare.Index] == move ? 90000 :
                                         hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index]);
                     }
 
                     Move bestMove = ttMove; 
                     Array.Sort(scores, allMoves);
                     i = -1;
-                    
+                    Move lastMove = Move.NullMove;                    
                     // Tree search
                     foreach(Move move in allMoves) {
                         i++;
@@ -166,10 +170,13 @@ using System.Linq;
                             if (!move.IsCapture) {
                                 kMoves[ply] =  move;
                                 hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                                cmhMoves[(int)lastMove.MovePieceType, lastMove.TargetSquare.Index] = move;
                             }
                             flag = 2;
+                            lastMove = move;
                             break;
                         }
+
 
 
                     } // End of tree search
