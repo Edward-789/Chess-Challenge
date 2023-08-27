@@ -95,24 +95,24 @@ using System.Linq;
 
                     // Internal Iterative Reductions (IIR)
                     else if(depth > 4 && !InCheck) depth--;
-
-                    if (depth <= 8) {
+                    
+                    if (depth <= 8 || !InCheck && notPvNode) {
                         staticEval = staticEvalPos();
                         if(qsearch) {
                             bestScore = staticEval;
                             if(bestScore >= beta) return bestScore; 
                             alpha = Math.Max(alpha, bestScore);
                         } else if(notPvNode && !InCheck) {
-                            if (staticEvalPos() - 100 * depth >= beta) return staticEval;
+                            if (staticEval - 100 * depth >= beta) return staticEval;
 
                             // Null move pruning
-
-                        }
-                    }
-                     if (depth >= 2 && oard.TrySkipTurn()) {   
+                            if (depth >= 2) {   
+                                board.TrySkipTurn();
                                 int nullScore = Search(beta, 3 + depth / 5);
                                 board.UndoSkipTurn();   
                                 if (nullScore >= beta) return nullScore;
+                            }
+                        }
                     }
                     var allMoves = board.GetLegalMoves(qsearch);
                     int flag = 1, i = 0;
