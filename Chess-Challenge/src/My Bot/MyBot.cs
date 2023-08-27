@@ -70,11 +70,11 @@ using System.Linq;
 
                     bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta;
                     ulong key = board.ZobristKey;
-                    int score, bestScore = -600001, staticEval;
 
                     // Check for repetition
                     if(isNotRoot && board.IsRepeatedPosition()) return 0;   
 
+                    int score, bestScore = -6000001, staticEval = depth <= 8 ? staticEvalPos() : bestScore;
                     
                     // Local function 
                     int Search(int nextAlpha, int Reduction = 1) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply);
@@ -95,25 +95,23 @@ using System.Linq;
 
                     // Internal Iterative Reductions (IIR)
                     else if(depth > 4 && !InCheck) depth--;
-                    
-                    if (depth <= 8 || !InCheck && notPvNode) {
-                        staticEval = staticEvalPos();
-                        if(qsearch) {
-                            bestScore = staticEval;
-                            if(bestScore >= beta) return bestScore; 
-                            alpha = Math.Max(alpha, bestScore);
-                        } else if(notPvNode && !InCheck) {
-                            if (staticEval - 100 * depth >= beta && depth <= 8) return staticEval;
 
-                            // Null move pruning
-                            if (depth >= 2) {   
-                                board.TrySkipTurn();
-                                int nullScore = Search(beta, 3 + depth / 5);
-                                board.UndoSkipTurn();   
-                                if (nullScore >= beta) return nullScore;
-                            }
+
+                    if(qsearch) {
+                        bestScore = staticEval;
+                        if(bestScore >= beta) return bestScore; 
+                        alpha = Math.Max(alpha, bestScore);
+                    } else if (!InCheck && notPvNode) {
+                        if (staticEval - 100 * depth >= beta) return staticEval;
+
+                        if (depth >= 2) {
+                            board.TrySkipTurn();
+                            Search(beta, 3 + depth / 5);
+                            board.UndoSkipTurn();
+                            if (score > beta) return score;
                         }
                     }
+                    
                     var allMoves = board.GetLegalMoves(qsearch);
                     int flag = 1, i = 0;
                     var scores = new int[allMoves.Length];
@@ -178,7 +176,7 @@ using System.Linq;
 
                     // Check stale or checkmate
                     if(bestScore == -600001) 
-                        return InCheck ? board.PlyCount - 30000 : 0;
+                        return InCheck ? ply - 30000 : 0;
 
                     // Check fail-high/low/exact score for TT
                     // int bound = bestScore >= beta ? 2 : bestScore > origAlpha ? 3 : 1;
