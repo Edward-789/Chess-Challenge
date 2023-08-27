@@ -103,7 +103,7 @@ using System.Linq;
                             if(bestScore >= beta) return bestScore; 
                             alpha = Math.Max(alpha, bestScore);
                         } else if(notPvNode && !InCheck) {
-                            if (staticEval - 100 * depth >= beta) return staticEval;
+                            if (staticEval - 100 * depth >= beta && depth <= 8) return staticEval;
 
                             // Null move pruning
                             if (depth >= 2) {   
