@@ -115,7 +115,7 @@ using System.Linq;
                         }
                     }
                     var allMoves = board.GetLegalMoves(qsearch);
-                    int colour = board.IsWhiteToMove ? 0 : 1, flag = 1, i = 0;
+                    int flag = 1, i = 0;
                     var scores = new int[allMoves.Length];
             
                     // Move ordering       
@@ -125,7 +125,7 @@ using System.Linq;
                                         move.IsCapture ?  100000 * (int)move.CapturePieceType - (int)move.MovePieceType :
                                         move.IsPromotion ? 100000 * (int)move.PromotionPieceType :  
                                         kMoves[ply] == move ? 95000 :
-                                        hMoves[colour, (int)move.MovePieceType, move.TargetSquare.Index]);
+                                        hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index]);
                     }
 
                     Move bestMove = ttMove; 
@@ -143,7 +143,7 @@ using System.Linq;
 
                         board.MakeMove(move);
                             // PVS + LMR
-                            int R = i > 3 && depth > 3 ? i / (notPvNode ? 8 : 6) + depth / 6 : 1;
+                            int R = i > 3 && depth > 3 ? 1 + i / (notPvNode ? 12 : 15)  + depth / 15 : 1;
                             if (i == 0 || qsearch || notPvNode || 
                             // If PV-node / qsearch, search(beta)
                             Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1)
@@ -167,7 +167,7 @@ using System.Linq;
                         if (alpha >= beta) {
                             if (!move.IsCapture) {
                                 kMoves[ply] =  move;
-                                hMoves[colour, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                                hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
                             }
                             flag = 2;
                             break;
