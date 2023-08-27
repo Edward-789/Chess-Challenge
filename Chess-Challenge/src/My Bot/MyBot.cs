@@ -106,13 +106,13 @@ using System.Linq;
                             if (staticEvalPos() - 100 * depth >= beta) return staticEval;
 
                             // Null move pruning
-                            if (depth >= 2) {   
-                                board.TrySkipTurn();
+
+                        }
+                    }
+                     if (depth >= 2 && oard.TrySkipTurn()) {   
                                 int nullScore = Search(beta, 3 + depth / 5);
                                 board.UndoSkipTurn();   
                                 if (nullScore >= beta) return nullScore;
-                            }
-                        }
                     }
                     var allMoves = board.GetLegalMoves(qsearch);
                     int flag = 1, i = 0;
