@@ -144,7 +144,7 @@ using System.Linq;
                         board.MakeMove(move);
                             // PVS + LMR
                             int R = i > 3 && depth > 3 ? 1 + i / (notPvNode ? 12 : 15)  + depth / 15 : 1;
-                            if (i == 0 || qsearch
+                            if (i == 0 || qsearch ||
                             // If PV-node / qsearch, search(beta)
                             Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1)
                             // If null-window search fails-high, search(beta)
