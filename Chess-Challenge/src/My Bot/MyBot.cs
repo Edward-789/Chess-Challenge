@@ -68,14 +68,13 @@ using System.Linq;
                 // Search function
                 int Negamax(int depth, int alpha, int beta, int ply) {
 
-                    bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta;
+                    bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta, fprune = false;
                     ulong key = board.ZobristKey;
 
                     // Check for repetition
                     if(isNotRoot && board.IsRepeatedPosition()) return 0;   
 
-                    int score, bestScore = -6000001, staticEval = depth <= 8 ? staticEvalPos() : bestScore;
-                    
+                    int score, bestScore = -6000001;
                     // Local function 
                     int Search(int nextAlpha, int Reduction = 1) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply);
 
@@ -98,12 +97,16 @@ using System.Linq;
 
 
                     if(qsearch) {
-                        bestScore = staticEval;
+                        bestScore = staticEvalPos();
                         if(bestScore >= beta) return bestScore; 
                         alpha = Math.Max(alpha, bestScore);
                     } else if (!InCheck && notPvNode) {
-                        if (staticEval - 100 * depth >= beta) return staticEval;
-
+                        if (depth <= 8) {
+                            int staticEval = staticEvalPos();
+                            if (staticEval - 100 * depth >= beta) return staticEval;
+                            fprune = staticEval + 140 * depth <= alpha;     
+                        }
+    
                         if (depth > 2) {
                             board.TrySkipTurn();
                             Search(beta, 3 + depth / 5);
@@ -133,8 +136,10 @@ using System.Linq;
                     // Tree search
                     foreach(Move move in allMoves) {
                         i++;
-                        
+
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
+
+                        if (fprune && !(i == 0 && scores[i] < -100000)) continue;
 
                         board.MakeMove(move);
                             // PVS + LMR
@@ -208,4 +213,4 @@ using System.Linq;
 
             }
         }
-    }           
+    }               
