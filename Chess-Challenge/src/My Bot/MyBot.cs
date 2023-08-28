@@ -133,9 +133,6 @@ using System.Linq;
                     // Tree search
                     foreach(Move move in allMoves) {
                         i++;
-
-                        // Late Move Pruning
-                        if (i > 3 + depth * depth && depth <= 6 && scores[i] > -95000) continue;
                         
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
 
