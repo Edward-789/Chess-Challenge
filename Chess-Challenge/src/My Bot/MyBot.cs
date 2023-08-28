@@ -93,7 +93,7 @@ using System.Linq;
                     }
 
                     // Internal Iterative Reductions (IIR)
-                    else if(depth > 4 && !InCheck) depth--;
+                    else if(depth > 4) depth--;
 
 
                     if(qsearch) {
