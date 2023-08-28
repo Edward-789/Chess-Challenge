@@ -101,13 +101,13 @@ using System.Linq;
                         if(bestScore >= beta) return bestScore; 
                         alpha = Math.Max(alpha, bestScore);
                     } else if (!InCheck && notPvNode) {
+                        int staticEval = staticEvalPos();
                         if (depth <= 8) {
-                            int staticEval = staticEvalPos();
                             if (staticEval - 100 * depth >= beta) return staticEval;
                             fprune = staticEval + 140 * depth <= alpha;     
                         }
     
-                        if (depth > 2) {
+                        if (depth > 2 && staticEval >= beta) {
                             board.TrySkipTurn();
                             Search(beta, 3 + depth / 5);
                             board.UndoSkipTurn();
@@ -146,7 +146,7 @@ using System.Linq;
                             int R = i > 3 && depth > 3 ? 1 + i / (notPvNode ? 12 : 15)  + depth / 15 : 1;
                             if (i == 0 || qsearch ||
                             // If PV-node / qsearch, search(beta)
-                            Search(alpha + 1, R) < 999999 && score > alpha && (score < beta || R > 1)
+                            Search(alpha + 1 , R) < 999999 && score > alpha && (score < beta || R > 1)
                             // If null-window search fails-high, search(beta)
                             ) Search(beta);   
                         board.UndoMove(move);
