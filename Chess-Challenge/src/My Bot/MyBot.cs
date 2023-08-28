@@ -104,7 +104,7 @@ using System.Linq;
                     } else if (!InCheck && notPvNode) {
                         if (staticEval - 100 * depth >= beta) return staticEval;
 
-                        if (depth >= 2) {
+                        if (depth > 2) {
                             board.TrySkipTurn();
                             Search(beta, 3 + depth / 5);
                             board.UndoSkipTurn();
@@ -196,13 +196,14 @@ using System.Linq;
             {
                 // Aspiration windows
 
-                int eval = Negamax(depth++, alpha, beta, 0);
+                int eval = Negamax(depth, alpha, beta, 0);
                 
                 if (eval <= alpha) alpha -= 62;
                 else if (eval >= beta) beta += 62;
                 else {
                     alpha = eval - 17;
                     beta = eval + 17;
+                    depth++;
                 }
 
                 if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
@@ -210,4 +211,4 @@ using System.Linq;
 
             }
         }
-    }   
+    }           
