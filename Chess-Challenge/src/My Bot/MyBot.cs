@@ -53,7 +53,7 @@ using System.Linq;
 
                                 // Material and square evaluation
                                 square = BitboardHelper.ClearAndGetIndexOfLSB(ref mask) ^ 56 * sideToMove;
-                                middlegame += UnpackedPestoTables[square][piece]; 
+                                middlegame += UnpackedPestoTables[square][piece];   
                                 endgame += UnpackedPestoTables[square][piece + 6];
                             }
                                                                                                                     // Tempo bonus to help with aspiration windows
@@ -61,7 +61,7 @@ using System.Linq;
                 }
 
                 // Search function
-                int Negamax(int depth, int alpha, int beta, int ply) {
+                int Negamax(int depth, int alpha, int beta, int ply, bool notLastMoveNull) {
 
                     bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta, fprune = false;
                     ulong key = board.ZobristKey;
@@ -71,7 +71,7 @@ using System.Linq;
 
                     int score, bestScore = -6000001;
                     // Local function 
-                    int Search(int nextAlpha, int Reduction = 1) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply);
+                    int Search(int nextAlpha, int Reduction = 1, bool canNull = true) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply, canNull);
 
                     // Check Extensions
                     if(InCheck) depth++;
@@ -96,15 +96,15 @@ using System.Linq;
                         if(bestScore >= beta) return bestScore; 
                         alpha = Math.Max(alpha, bestScore);
                     } else if (!InCheck && notPvNode) {
-                        int staticEval = staticEvalPos();
                         if (depth <= 8) {
+                            int staticEval = staticEvalPos();
                             if (staticEval - 100 * depth >= beta) return staticEval;
                             fprune = staticEval + 140 * depth <= alpha;     
                         }
     
-                        if (depth > 2 && staticEval >= beta) {
+                        if (notLastMoveNull && depth > 2) {
                             board.TrySkipTurn();
-                            Search(beta, 3 + depth / 5);
+                            Search(beta, 3 + depth / 5, false);
                             board.UndoSkipTurn();
                             if (score > beta) return score;
                         }
@@ -134,7 +134,7 @@ using System.Linq;
 
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
 
-                        // Futility pruning + LMP
+                        // Futility pruning + LMPwzw
                         if (fprune && i != 0 && scores[i] < -100000) continue;
 
                         board.MakeMove(move);
@@ -162,7 +162,7 @@ using System.Linq;
                         // Fail-High condition
                         if (alpha >= beta) {
                             if (!move.IsCapture) {
-                                kMoves[ply] =  move;
+                                kMoves[ply] = move;
                                 hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
                             }
                             flag = 2;
@@ -194,7 +194,7 @@ using System.Linq;
             {
                 // Aspiration windows
 
-                int eval = Negamax(depth, alpha, beta, 0);
+                int eval = Negamax(depth, alpha, beta, 0, true);
                 
                 if (eval <= alpha) alpha -= 62;
                 else if (eval >= beta) beta += 62;
