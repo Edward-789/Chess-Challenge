@@ -98,7 +98,7 @@ using System.Linq;
                     } else if (!InCheck && notPvNode) {
                         if (depth <= 8) {
                             int staticEval = staticEvalPos();
-                            if (staticEval - 100 * depth >= beta) return staticEval;
+                            if (staticEval - 100 * depth >= beta) return staticEval - 100 * depth;
                             fprune = staticEval + 140 * depth <= alpha;     
                         }
     
