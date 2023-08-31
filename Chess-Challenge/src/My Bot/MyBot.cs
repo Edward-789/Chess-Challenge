@@ -134,9 +134,9 @@ using System.Linq;
 
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
 
-                        // Futility pruning
+                        // Futility pruning + LMR
                         if (fprune && i != 0 && scores[i] > -100000 ||
-                        notPvNode && i > 3 + depth * depth && scores[i] > -95000 && depth <= 2) break;
+                        notPvNode && i > 3 + depth * depth && scores[i] > -95000 && depth <= 4) break;
 
                         board.MakeMove(move);
                             // PVS + LMR
