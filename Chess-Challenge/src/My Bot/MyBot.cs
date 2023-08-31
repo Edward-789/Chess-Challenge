@@ -102,7 +102,7 @@ using System.Linq;
                             fprune = staticEval + 140 * depth <= alpha;     
                         }
     
-                        if (notLastMoveNull && depth > 2) {
+                        if (notLastMoveNull && depth >= 2) {
                             board.TrySkipTurn();
                             Search(beta, 3 + depth / 5, false);
                             board.UndoSkipTurn();
