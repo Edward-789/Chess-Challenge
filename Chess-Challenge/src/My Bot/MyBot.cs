@@ -26,6 +26,7 @@ using System.Linq;
         }   
 
         Move rootBestMove;
+        // Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
         Move[] kMoves = new Move[1024]; 
 
         // const int TTlength= 0x400000;
@@ -95,14 +96,12 @@ using System.Linq;
                         if(bestScore >= beta) return bestScore; 
                         alpha = Math.Max(alpha, bestScore);
                     } else if (!InCheck && notPvNode) {
-                        // Reverse futility Pruning
                         if (depth <= 8) {
                             int staticEval = staticEvalPos();
                             if (staticEval - 100 * depth >= beta) return staticEval - 100 * depth;
                             fprune = staticEval + 140 * depth <= alpha;     
                         }
-
-                        // Null Move Pruning
+    
                         if (notLastMoveNull && depth >= 2) {
                             board.TrySkipTurn();
                             Search(beta, 3 + depth / 5, false);
@@ -133,9 +132,9 @@ using System.Linq;
                     foreach(Move move in allMoves) {
                         i++;
 
-                        if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) return 999999;
+                        if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) depth /= 0;
 
-                        // Futility pruning + LMP
+                        // Futility pruning + LMR
                         if (fprune && i != 0 && scores[i] > -100000 ||
                         notPvNode && i > 3 + depth * depth && scores[i] > -95000 && depth <= 4) break;
 
@@ -191,24 +190,25 @@ using System.Linq;
 
             }
 
-            // Iterative deepening
-            for (int depth = 0, alpha = -600000, beta = 600000;;) 
-            {
-                // Aspiration windows
+            try {
+                for (int depth = 0, alpha = -600000, beta = 600000;;) 
+                {
+                    // Aspiration windows
 
-                int eval = Negamax(depth, alpha, beta, 0, true);
-                
-                if (eval <= alpha) alpha -= 62;
-                else if (eval >= beta) beta += 62;
-                else {
-                    alpha = eval - 17;
-                    beta = eval + 17;
-                    depth++;
+                    int eval = Negamax(depth, alpha, beta, 0, true);
+                    
+                    if (eval <= alpha) alpha -= 62;
+                    else if (eval >= beta) beta += 62;
+                    else {
+                        alpha = eval - 17;
+                        beta = eval + 17;
+                        depth++;
+                    }
+
                 }
-
-                if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) 
-                    return rootBestMove;
-
             }
+            catch {  }
+
+            return rootBestMove;
         }
     }               
