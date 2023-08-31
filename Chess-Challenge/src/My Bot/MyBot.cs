@@ -136,11 +136,11 @@ using System.Linq;
 
                         // Futility pruning
                         if (fprune && i != 0 && scores[i] > -100000 ||
-                        notPvNode && i > 3 + depth * depth && scores[i] > -95000 && depth <= 4) break;
+                        notPvNode && i > 3 + depth * depth && scores[i] > -95000 && depth <= 2) break;
 
                         board.MakeMove(move);
                             // PVS + LMR
-                            int R = i > 3 && depth > 3 ? 1 + i / (notPvNode ? 12 : 15)  + depth / 15 : 1;
+                            int R = i > 3 && depth > 3 ? 1 + i / (notPvNode ? 8 : 12)  + depth / 12 : 1;
                             if (i == 0 || qsearch ||
                             // If PV-node / qsearch, search(beta)
                             Search(alpha + 1 , R) < 999999 && score > alpha && (score < beta || R > 1)
