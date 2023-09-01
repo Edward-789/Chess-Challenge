@@ -63,7 +63,7 @@ using System.Linq;
                 // Search function
                 int Negamax(int depth, int alpha, int beta, int ply, bool notLastMoveNull) {
 
-                    bool isNotRoot = ply++ > 0, qsearch = depth <= 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta, fprune = false;
+                    bool isNotRoot = ply++ > 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta, fprune = false;
                     ulong key = board.ZobristKey;
 
                     // Check for repetition
@@ -90,7 +90,7 @@ using System.Linq;
                     // Internal Iterative Reductions (IIR)
                     else if(depth > 4) depth--;
 
-
+                    bool qsearch = depth <= 0;
                     if(qsearch) {
                         bestScore = staticEvalPos();
                         if(bestScore >= beta) return bestScore; 
