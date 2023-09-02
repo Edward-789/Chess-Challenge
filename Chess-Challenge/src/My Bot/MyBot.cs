@@ -1,3 +1,5 @@
+#define DEBUG
+
 using ChessChallenge.API;
 using System;
 using System.Linq;
@@ -27,7 +29,7 @@ using System.Linq;
 
         Move rootBestMove;
         // Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
-        Move[] kMoves = new Move[1024]; 
+        Move[] kMoves = new Move[1024];
 
         // const int TTlength= 0x400000;
         (ulong, Move, int, int, int)[] TTtable= new (ulong, Move, int, int, int)[0x400000];
@@ -174,6 +176,9 @@ using System.Linq;
                     } // End of tree search
 
                     // Check stale or checkmate
+                    // If bestScore hasnt been updated, we cant be in qsearch, because then bestScore is staticEval
+                    // and there must be no legal moves to update bestScore
+                    // therefore, since there are no legal moves, we are in check/stalemate.
                     if(bestScore == -6000001) 
                         return InCheck ? ply - 30000 : 0;
 
@@ -189,6 +194,9 @@ using System.Linq;
                     return bestScore;
 
             }
+            #if DEBUG //#DEBUG
+                int globalEval = 0, globalDepth = 0; // #DEBUG 
+            #endif //#DEBUG
 
             try {
                 for (int depth = 0, alpha = -600000, beta = 600000;;) 
@@ -203,12 +211,23 @@ using System.Linq;
                         alpha = eval - 17;
                         beta = eval + 17;
                         depth++;
-                    }
 
+                    #if DEBUG //#DEBUG
+                        globalEval = eval;// #DEBUG 
+                        globalDepth = depth; //#DEBUG
+                    #endif //#DEBUG
+
+                    }
                 }
             }
             catch {  }
 
+            #if DEBUG //#DEBUG
+                Console.WriteLine("Evaluation : {0} || Time : {1} || Depth : {2}" , //#DEBUG
+                                globalEval, //#DEBUG
+                                timer.MillisecondsElapsedThisTurn, //#DEBUG
+                                globalDepth); // #DEBUG
+            #endif //#DEBUG
             return rootBestMove;
         }
     }               
