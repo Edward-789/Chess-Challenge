@@ -135,7 +135,7 @@ using System.Linq;
 
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) depth /= 0;
 
-                        // Futility pruning + LMR
+                        // Futility pruning
                         if (fprune && i != 0 && scores[i] > -100000) break;
 
                         board.MakeMove(move);
@@ -143,7 +143,7 @@ using System.Linq;
                             bool canReduce = i > 3 && depth > 3;
                             if (i == 0 || qsearch ||
                             // If PV-node / qsearch, search(beta)
-                            Search(alpha + 1 , canReduce ? 1 + i / (notPvNode ? 8 : 12)  + depth / 12 : 1) < 999999 && score > alpha && (score < beta || canReduce)
+                            Search(alpha + 1 , canReduce ? notPvNode ? 3 : 2 : 1) < 999999 && score > alpha && (score < beta || canReduce)
                             // If null-window search fails-high, search(beta)
                             ) Search(beta);   
                         board.UndoMove(move);
