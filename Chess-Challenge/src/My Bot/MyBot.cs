@@ -100,7 +100,7 @@ using System.Linq;
                         if (depth <= 8) {
                             int staticEval = staticEvalPos();
                             if (staticEval - 100 * depth >= beta) return staticEval - 100 * depth;
-                            fprune = staticEval + 140 * depth <= alpha;     
+                            fprune = staticEval + 140 * depth <= alpha; 
                         }
     
                         if (notLastMoveNull && depth >= 2) {
@@ -127,21 +127,21 @@ using System.Linq;
 
                     Move bestMove = ttMove; 
                     Array.Sort(scores, allMoves);
-                    i = -1;
+                    i = 0;
                     
                     // Tree search
                     foreach(Move move in allMoves) {
-                        i++;
 
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) depth /= 0;
 
                         // Futility pruning
-                        if (fprune && i != 0 && scores[i] > -100000) continue;
+                        if (fprune && i != 0 && scores[i] > -100000 ||
+                        notPvNode && depth <= 4 && i > 2 + depth * depth) continue;
 
                         board.MakeMove(move);
                             // PVS + LMR
                             bool canReduce = i > 3 && depth > 3;
-                            if (i == 0 || qsearch ||
+                            if (i++ == 0 || qsearch ||
                             // If PV-node / qsearch, search(beta)
                             Search(alpha + 1 , canReduce ? notPvNode ? 3 : 2 : 1) < 999999 && score > alpha && (score < beta || canReduce)
                             // If null-window search fails-high, search(beta)
