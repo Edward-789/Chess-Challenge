@@ -136,7 +136,7 @@ using System.Linq;
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) depth /= 0;
 
                         // Futility pruning
-                        if (fprune && i != 0 && scores[i] > -100000) break;
+                        if (fprune && i != 0 && scores[i] > -100000) continue;
 
                         board.MakeMove(move);
                             // PVS + LMR
