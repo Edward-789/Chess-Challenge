@@ -10,7 +10,6 @@ using System.Linq;
 
         // Tyrants PSTs
         // why is tyrant so good at C#?
-        private readonly int[] scores = new int [218];
 
         static int piece;  
 
@@ -32,18 +31,17 @@ using System.Linq;
         
             public Move Think(Board board, Timer timer)
             {
-            #if DEBUG
-                        long nodes = 0; //#DEBUG
-            #endif
+                
 
                 // Clear history
                 var hMoves = new int[2, 7, 64];
+                var scores = new int[218];
                 // Eval function
                 int staticEvalPos()
                 {
                     int middlegame = 0, endgame = 0, sideToMove = 2, square, gamephase = 0;
                     for (; --sideToMove >= 0; middlegame *= -1, endgame *= -1   )
-                        for (piece = -1 ; ++piece < 6;)
+                        for (piece = 6; --piece >= 0;)
                             for (ulong mask = board.GetPieceBitboard((PieceType)piece + 1, sideToMove > 0); mask != 0;)
                             {
                                      
@@ -64,10 +62,6 @@ using System.Linq;
 
                     bool isNotRoot = ply++ > 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta, fprune = false, qsearch;
                     ulong key = board.ZobristKey;
-
-                    #if DEBUG
-                        nodes++;
-                    #endif
 
                     // Check for repetition
                     if(isNotRoot && board.IsRepeatedPosition()) return 0;   
@@ -118,8 +112,7 @@ using System.Linq;
                     board.GetLegalMovesNonAlloc(ref allMoves, qsearch);
             
                     // Move ordering
-                    for(; i <  allMoves.Length;) {
-                        Move move = allMoves[i];
+                    foreach(Move move in allMoves) {
                         scores[i++] = -(ttMove == move && ttKey == key ? 1000000000 :
                                         move.IsCapture ?  100000 * (int)move.CapturePieceType - (int)move.MovePieceType :
                                         move.IsPromotion ? 96000 * (int)move.PromotionPieceType :  
@@ -224,12 +217,10 @@ using System.Linq;
             catch {  }
 
             #if DEBUG //#DEBUG
-                Console.WriteLine("Evaluation : {0} || Time : {1} || Depth : {2} || Total nodes : {3} || NPS : {4}" , //#DEBUG
+                Console.WriteLine("Evaluation : {0} || Time : {1} || Depth : {2}" , //#DEBUG
                                 globalEval, //#DEBUG
                                 timer.MillisecondsElapsedThisTurn, //#DEBUG
-                                globalDepth, //#DEBUG
-                                nodes, //#DEBUG
-                                1000 * nodes / (timer.MillisecondsElapsedThisTurn + 1)); // #DEBUG
+                                globalDepth); // #DEBUG
             #endif //#DEBUG
             return rootBestMove;
         }
