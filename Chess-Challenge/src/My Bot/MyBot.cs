@@ -32,7 +32,9 @@ using System.Linq;
         
             public Move Think(Board board, Timer timer)
             {
-                
+            #if DEBUG
+                        long nodes = 0; //#DEBUG
+            #endif
 
                 // Clear history
                 var hMoves = new int[2, 7, 64];
@@ -62,6 +64,10 @@ using System.Linq;
 
                     bool isNotRoot = ply++ > 0, InCheck = board.IsInCheck(), notPvNode = alpha + 1 == beta, fprune = false, qsearch;
                     ulong key = board.ZobristKey;
+
+                    #if DEBUG
+                        nodes++;
+                    #endif
 
                     // Check for repetition
                     if(isNotRoot && board.IsRepeatedPosition()) return 0;   
@@ -218,10 +224,12 @@ using System.Linq;
             catch {  }
 
             #if DEBUG //#DEBUG
-                Console.WriteLine("Evaluation : {0} || Time : {1} || Depth : {2}" , //#DEBUG
+                Console.WriteLine("Evaluation : {0} || Time : {1} || Depth : {2} || Total nodes : {3} || NPS : {4}" , //#DEBUG
                                 globalEval, //#DEBUG
                                 timer.MillisecondsElapsedThisTurn, //#DEBUG
-                                globalDepth); // #DEBUG
+                                globalDepth, //#DEBUG
+                                nodes, //#DEBUG
+                                1000 * nodes / (timer.MillisecondsElapsedThisTurn + 1)); // #DEBUG
             #endif //#DEBUG
             return rootBestMove;
         }
