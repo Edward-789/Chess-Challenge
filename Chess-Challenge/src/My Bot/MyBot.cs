@@ -11,20 +11,16 @@ using System.Linq;
         // Tyrants PSTs
         // why is tyrant so good at C#?
 
-        static int piece;  
-
-        private readonly int[][] UnpackedPestoTables = new[] {  63746705523041458768562654720m, 71818693703096985528394040064m, 75532537544690978830456252672m, 75536154932036771593352371712m, 76774085526445040292133284352m, 3110608541636285947269332480m, 936945638387574698250991104m, 75531285965747665584902616832m,77047302762000299964198997571m, 3730792265775293618620982364m, 3121489077029470166123295018m, 3747712412930601838683035969m, 3763381335243474116535455791m, 8067176012614548496052660822m, 4977175895537975520060507415m, 2475894077091727551177487608m,2458978764687427073924784380m, 3718684080556872886692423941m, 4959037324412353051075877138m, 3135972447545098299460234261m, 4371494653131335197311645996m, 9624249097030609585804826662m, 9301461106541282841985626641m, 2793818196182115168911564530m, 77683174186957799541255830262m, 4660418590176711545920359433m, 4971145620211324499469864196m, 5608211711321183125202150414m, 5617883191736004891949734160m, 7150801075091790966455611144m, 5619082524459738931006868492m, 649197923531967450704711664m,  75809334407291469990832437230m, 78322691297526401047122740223m, 4348529951871323093202439165m, 4990460191572192980035045640m, 5597312470813537077508379404m, 4980755617409140165251173636m, 1890741055734852330174483975m, 76772801025035254361275759599m,75502243563200070682362835182m, 78896921543467230670583692029m, 2489164206166677455700101373m, 4338830174078735659125311481m, 4960199192571758553533648130m, 3420013420025511569771334658m, 1557077491473974933188251927m, 77376040767919248347203368440m,  73949978050619586491881614568m, 77043619187199676893167803647m, 1212557245150259869494540530m, 3081561358716686153294085872m, 3392217589357453836837847030m, 1219782446916489227407330320m, 78580145051212187267589731866m, 75798434925965430405537592305m,68369566912511282590874449920m, 72396532057599326246617936384m, 75186737388538008131054524416m, 77027917484951889231108827392m, 73655004947793353634062267392m, 76417372019396591550492896512m, 74568981255592060493492515584m, 70529879645288096380279255040m}
-            .Select(packedTable =>
-            {
-                piece = 0;
-                return new System.Numerics.BigInteger(packedTable).ToByteArray().Take(12)
-                        .Select(square => (int)((sbyte)square * 1.461) + new[] {82, 337, 365, 477, 1025, 0,94, 281, 297, 512, 936, 0}[piece++]) 
-                    .ToArray();
-            }).ToArray();
+        private readonly int[] UnpackedPestoTables = new[] { 59445390105436474986072674560m, 70290677894333901267150682880m, 71539517137735599738519086336m, 78957476706409475571971323392m, 76477941479143404670656189696m, 78020492916263816717520067072m, 77059410983631195892660944640m, 61307098105356489251813834752m, 77373759864583735626648317994m, 3437103645554060776222818613m, 5013542988189698109836108074m, 2865258213628105516468149820m, 5661498819074815745865228343m, 8414185094009835055136457260m, 7780689186187929908113377023m, 2486769613674807657298071274m, 934589548775805732457284597m, 4354645360213341838043912961m, 8408178448912173986754536726m, 9647317858599793704577609753m, 9972476475626052485400971547m, 9023455558428990305557695533m, 9302688995903440861301845277m, 4030554014361651745759368192m, 78006037809249804099646260205m, 5608292212701744542498884606m, 9021118043939758059554412800m, 11825811962956083217393723906m, 11837863313235587677091076880m, 11207998775238414808093699594m, 9337766883211775102593666830m, 4676129865778184699670239740m, 75532551896838498151443462373m, 3131203134016898079077499641m, 8090231125077317934436125943m, 11205623443703685966919568899m, 11509049675918088175762150403m, 9025911301112313205746176509m, 6534267870125294841726636036m, 3120251651824756925472439792m, 74280085839011331528989207781m, 324048954150360030097570806m, 4681017700776466875968718582m, 7150867317927305549636569078m, 7155688890998399537110584833m, 5600986637454890754120354040m, 1563108101768245091211217423m, 78303310575846526174794479097m, 70256775951642154667751105509m, 76139418398446961904222530552m, 78919952506429230065925355250m, 2485617727604605227028709358m, 3105768375617668305352130555m, 1225874429600076432248013062m, 76410151742261424234463229975m, 72367527118297610444645922550m, 64062225663112462441888793856m, 67159522168020586196575185664m, 71185268483909686702087266048m, 75814236297773358797609495296m, 69944882517184684696171572480m, 74895414840161820695659345152m, 69305332238573146615004392448m, 63422661310571918454614119936m,}
+        .SelectMany(packedTable =>
+            decimal.GetBits(packedTable).SelectMany(BitConverter.GetBytes)
+                        // No point in only taking 12 bytes. Since we never access the last 4 anyway, we can just leave them as garbage
+                        .Select((square, index) => (int)((sbyte)square * 1.461) + new[] { 92, 353, 355, 507, 1098, 0, 98, 278, 291, 515, 917, 0 }[index % 12])
+                    .ToArray()
+            ).ToArray();
          
 
         Move rootBestMove;
-        readonly Move[] kMoves = new Move[2048];
         // Piece values in order of - NULL, PAWN, BISHOP , KNIGHT, ROOK, QUEEN, KING    
         // const int TTlength= 0x400000;
         (ulong, Move, int, int, int)[] TTtable= new (ulong, Move, int, int, int)[0x400000];
@@ -33,7 +29,8 @@ using System.Linq;
             {
                 
 
-                // Clear history
+                // Clear stuff
+                var kMoves = new Move[2048];
                 var hMoves = new int[2, 7, 64];
                 var scores = new int[218];
                 // Eval function
@@ -41,17 +38,26 @@ using System.Linq;
                 {
                     int middlegame = 0, endgame = 0, sideToMove = 2, square, gamephase = 0;
                     for (; --sideToMove >= 0; middlegame *= -1, endgame *= -1   )
-                        for (piece = 6; --piece >= 0;)
-                            for (ulong mask = board.GetPieceBitboard((PieceType)piece + 1, sideToMove > 0); mask != 0;)
-                            {
+                        for (int    piece = 6; --piece >= 0;)
+                            for (ulong mask = board.GetPieceBitboard((PieceType)piece + 1, sideToMove > 0); mask != 0;) {
                                      
-                                // Gamephase, middlegame -> endgame
-                                gamephase += 0x00042110 >> piece * 4 & 0x0F;
+                            gamephase += 0x00042110 >> piece * 4 & 0x0F;
 
-                                // Material and square evaluation
-                                square = BitboardHelper.ClearAndGetIndexOfLSB(ref mask) ^ 56 * sideToMove;
-                                middlegame += UnpackedPestoTables[square][piece];   
-                                endgame += UnpackedPestoTables[square][piece + 6];
+                            // Material and square evaluation
+                            square = BitboardHelper.ClearAndGetIndexOfLSB(ref mask) ^ 56 * sideToMove;
+
+                            if (piece == 2 && mask != 0) {
+                                middlegame += 28;
+                                endgame += 49;
+                            }
+
+                            if (piece == 0 && (0x101010101010101UL << (square & 7) & mask) > 0) {
+                                middlegame -= 12;
+                                endgame -= 31;
+                            }
+
+                            middlegame += UnpackedPestoTables[square * 16 + piece];
+                            endgame += UnpackedPestoTables[square * 16 + piece + 6];
                             }
                                                                                                                     // Tempo bonus to help with aspiration windows
                     return (middlegame * gamephase + endgame * (24 - gamephase)) /  (board.IsWhiteToMove ? 24 : -24) + gamephase / 2;
@@ -66,7 +72,7 @@ using System.Linq;
                     // Check for repetition
                     if(isNotRoot && board.IsRepeatedPosition()) return 0;   
 
-                    int score, bestScore = -6000001, flag = 1, i = 0;
+                    int score, bestScore = -6000001;
                     // Local function
                     int Search(int nextAlpha, int Reduction = 1, bool canNull = true) => score = -Negamax(depth - Reduction, -nextAlpha, -alpha, ply, canNull);
 
@@ -77,8 +83,8 @@ using System.Linq;
 
                     // TT cutoff
                     if (ttKey == key) {
-                        if( notPvNode && ttDepth >= depth && (
-                            ttBound == 3 // exact score
+                        if( notPvNode && ttDepth >=  depth && (
+                            ttBound == 0 // exact score
                                 || ttBound == 2 && ttScore >= beta // lower bound, fail high
                                 || ttBound == 1 && ttScore <= alpha // upper bound, fail low
                         )) return ttScore;
@@ -86,6 +92,8 @@ using System.Linq;
 
                     // Internal Iterative Reductions (IIR)
                     else if(depth > 4) depth--;
+
+                    ttBound = ttDepth = ttScore = 0;
 
                     
                     if(qsearch = depth <= 0) {
@@ -112,38 +120,38 @@ using System.Linq;
                     board.GetLegalMovesNonAlloc(ref allMoves, qsearch);
             
                     // Move ordering
-                    foreach(Move move in allMoves) {
-                        scores[i++] = -(ttMove == move && ttKey == key ? 1000000000 :
+                    foreach(Move move in allMoves) 
+                        scores[ttScore++] = -(ttMove == move && ttKey == key ? 1000000000 :
                                         move.IsCapture ?  100000 * (int)move.CapturePieceType - (int)move.MovePieceType :
                                         move.IsPromotion ? 96000 * (int)move.PromotionPieceType :  
                                         kMoves[ply] == move ? 95000 :
                                         hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index]);
-                    }
+                    
                     scores.AsSpan(0,allMoves.Length).Sort(allMoves);
                     
                     Move bestMove = ttMove; 
-                    i = 0;
-                    
+
+
                     // Tree search
                     foreach(Move move in allMoves) {
 
                         if (timer.MillisecondsElapsedThisTurn * 30 >= timer.MillisecondsRemaining) depth /= 0;
 
                         // Futility pruning
-                        if (fprune && i != 0 && scores[i] > -96000) continue;
-                        if (notPvNode && bestScore <= 20000 && depth <= 6 && i > 2 + depth * depth && scores[i] > -95000) break;   
+                        if (fprune && ttDepth != 0 && scores[ttDepth] > -96000) continue;
+                        // if (notPvNode && bestScore <= 20000 && depth <= 6 && ttDepth > 2 + depth * depth && scores[ttDepth] > -95000) break;   
 
                         board.MakeMove(move);
                             // PVS + LMR
-                            bool canReduce = i > 3 && depth > 3;
-                            if (i++ == 0 || qsearch ||
+                            bool canReduce = ttDepth > 3 && depth > 3;
+                            if (ttDepth++ == 0 || qsearch ||
                             // If PV-node / qsearch, search(beta)
                             Search(alpha + 1 , canReduce ? notPvNode ? 3 : 2 : 1) < 999999 && score > alpha && (score < beta || canReduce)
                             // If null-window search fails-high, search(beta)
                             ) Search(beta);   
                         board.UndoMove(move);
 
-
+    
                         // Update best move if neccesary
                         if (score > bestScore) {
                             bestScore = score;
@@ -152,17 +160,17 @@ using System.Linq;
                             if (bestScore > alpha) {
                                 alpha = bestScore;
                                 bestMove = move;
-                                flag = 3;
+                                ttBound = 3;
                             }
-                        // Fail-High condition
-                        if (alpha >= beta) {
-                            if (!move.IsCapture) {
-                                kMoves[ply] = move;
-                                hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                            // Fail-High condition
+                            if (alpha >= beta) {
+                                if (!move.IsCapture) {
+                                    kMoves[ply] = move;
+                                    hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                                }
+                                ttBound--;
+                                break;
                             }
-                            flag = 2;
-                            break;
-                        }
 
                         }
 
@@ -182,7 +190,7 @@ using System.Linq;
                                             bestMove, 
                                             depth, 
                                             bestScore, 
-                                            flag);
+                                            ttBound     );
 
                     return bestScore;
 
