@@ -84,9 +84,9 @@ using System.Linq;
                     // TT cutoff
                     if (ttKey == key) {
                         if( notPvNode && ttDepth >=  depth && (
-                            ttBound == 0 // exact score
+                            ttBound == 3 // exact score
                                 || ttBound == 2 && ttScore >= beta // lower bound, fail high
-                                || ttBound == 1 && ttScore <= alpha // upper bound, fail low
+                                || ttBound == 0 && ttScore <= alpha // upper bound, fail low
                         )) return ttScore;
                     }
 
@@ -161,17 +161,17 @@ using System.Linq;
                                 alpha = bestScore;
                                 bestMove = move;
                                 ttBound = 3;
-                            }
-                            // Fail-High condition
-                            if (alpha >= beta) {
-                                if (!move.IsCapture) {
-                                    kMoves[ply] = move;
-                                    hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                                // Fail-High condition
+                                if (alpha >= beta) {
+                                    if (!move.IsCapture) {
+                                        kMoves[ply] = move;
+                                        hMoves[ply & 1, (int)move.MovePieceType, move.TargetSquare.Index] += depth * depth;
+                                    }
+                                    ttBound--;
+                                    break;
                                 }
-                                ttBound--;
-                                break;
-                            }
 
+                            }
                         }
 
                     } // End of tree search
